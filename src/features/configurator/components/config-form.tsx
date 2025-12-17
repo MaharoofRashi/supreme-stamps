@@ -62,7 +62,7 @@ export function ConfigForm({ config, setConfig, logoPrice }: ConfigFormProps) {
                                 id="company-ar"
                                 placeholder="e.g. طوابع سوبريم ذ.م.م"
                                 className="text-right h-12 text-base"
-                                value={config.companyNameAr}
+                                value={config.companyNameAr || ""}
                                 onChange={(e) => setConfig({ ...config, companyNameAr: e.target.value })}
                                 style={{ direction: 'rtl' }}
                             />
@@ -95,7 +95,7 @@ export function ConfigForm({ config, setConfig, logoPrice }: ConfigFormProps) {
                             <Input
                                 id="license"
                                 placeholder="e.g. 123456"
-                                value={config.licenseNumber}
+                                value={config.licenseNumber || ""}
                                 disabled={!config.hasLicenseNumber}
                                 onChange={(e) => setConfig({ ...config, licenseNumber: e.target.value })}
                                 className={cn("h-12 transition-opacity", !config.hasLicenseNumber && "opacity-50")}

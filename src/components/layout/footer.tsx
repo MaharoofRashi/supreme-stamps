@@ -18,7 +18,7 @@ export function Footer() {
                         <h4 className="font-semibold">Quick Links</h4>
                         <ul className="space-y-2 text-sm text-muted-foreground">
                             <li><Link href="/" className="hover:text-primary transition-colors">Start Order</Link></li>
-                            <li><Link href="/track-order" className="hover:text-primary transition-colors">Track Order</Link></li>
+                            <li><Link href="/track" className="hover:text-primary transition-colors">Track Order</Link></li>
                             <li><Link href="/contact" className="hover:text-primary transition-colors">Contact Support</Link></li>
                         </ul>
                     </div>
