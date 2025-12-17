@@ -17,10 +17,7 @@ export const metadata: Metadata = {
   description: "Order premium custom company stamps online in UAE. Fast delivery, high-quality designs, and secure payment.",
 };
 
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
 
-import { AnimatedBackground } from "@/components/ui/animated-background";
 
 export default function RootLayout({
   children,
@@ -30,14 +27,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col relative`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <AnimatedBackground />
-        <Header />
-        <main className="flex-1 relative z-10">
-          {children}
-        </main>
-        <Footer />
+        {children}
       </body>
     </html>
   );
