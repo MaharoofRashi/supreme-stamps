@@ -9,6 +9,7 @@ import { ConfigForm } from "./components/config-form";
 import { DocumentUpload } from "./components/document-upload";
 import { StampPreview } from "./components/stamp-preview";
 import { OrderSummary } from "./components/order-summary";
+import { CustomerDetails } from "./components/customer-details"; // Imported
 
 export function StampConfigurator() {
     const { config, setConfig, basePrice, logoPrice, totalPrice } = useStampConfig();

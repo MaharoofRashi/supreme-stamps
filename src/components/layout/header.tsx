@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Stamp } from "lucide-react";
+import { Stamp, ShoppingCart } from "lucide-react";
+import { CartBadge } from "./cart-badge";
 
 export function Header() {
     return (
@@ -18,7 +19,7 @@ export function Header() {
                     <Link href="#configurator" className="text-muted-foreground hover:text-primary transition-colors">
                         Create Stamp
                     </Link>
-                    <Link href="/track-order" className="text-muted-foreground hover:text-primary transition-colors">
+                    <Link href="/track" className="transition-colors hover:text-foreground/80 text-foreground/60">
                         Track Order
                     </Link>
                     <Link href="/contact" className="text-muted-foreground hover:text-primary transition-colors">
@@ -26,6 +27,10 @@ export function Header() {
                     </Link>
                 </nav>
                 <div className="flex items-center gap-4">
+                    <Link href="/cart" className="relative p-2 hover:bg-neutral-100 rounded-full transition-colors">
+                        <ShoppingCart className="h-5 w-5 text-muted-foreground" />
+                        <CartBadge />
+                    </Link>
                     <Button className="font-semibold shadow-lg shadow-primary/20" asChild>
                         <Link href="#configurator">Order Now</Link>
                     </Button>
