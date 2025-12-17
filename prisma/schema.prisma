@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Order {
+  id         String   @id @default(cuid())
+  friendlyId String?  @unique // User-facing ID (e.g., SS-ABC123)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  status     String   @default("PENDING") // PENDING, PAID, DELIVERED, CANCELLED
+
+  // Customer Info
+  customerName  String
+  customerEmail String?
+  customerPhone String
+
+  // Delivery
+  deliveryMethod String  @default("DELIVERY") // DELIVERY or PICKUP
+  address        String? // Optional if pickup
+
+  // Pricing
+  totalPrice Float
+  currency   String @default("AED")
+
+  // Payment (Future)
+  paymentId     String?
+  paymentStatus String?
+
+  // Items
+  items OrderItem[]
+}
+
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  // Configuration
+  shape         String
+  color         String
+  companyName   String?
+  companyNameAr String?
+  licenseNumber String?
+  emirate       String?
+  hasLogo       Boolean
+
+  // Files
+  tradeLicenseUrl String?
+  logoUrl         String?
+
+  // Pricing Snapshot
+  price Float
+}
