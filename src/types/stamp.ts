@@ -11,7 +11,13 @@ export interface StampConfig {
     poBox?: string;
     hasLogo: boolean;
     hasLicenseNumber: boolean;
+    // Customer Details
+    customerName?: string;
+    customerEmail?: string;
+    customerPhone?: string;
+
     tradeLicense: File | null;
+    tradeLicenseUrl?: string;
 }
 
 export const SHAPES: { id: Shape; label: string; aspect: string }[] = [
@@ -28,5 +34,4 @@ export const COLORS: { id: Color; label: string; value: string; ring: string }[]
     { id: "green", label: "Green", value: "bg-green-600", ring: "ring-green-600" },
 ];
 
-export const BASE_PRICE = 99;
-export const LOGO_PRICE = 49;
+// Prices moved to src/lib/pricing.ts
