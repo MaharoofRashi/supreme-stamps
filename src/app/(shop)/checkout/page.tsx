@@ -44,7 +44,7 @@ export default function CheckoutPage() {
         setIsLoading(true);
 
         try {
-            // Construct Payload
+            // Step 1: Create order in database
             const payload = {
                 customerName: formData.customerName,
                 customerEmail: formData.customerEmail || "",
@@ -65,27 +65,47 @@ export default function CheckoutPage() {
                 }))
             };
 
-            const response = await fetch("/api/orders", {
+            const orderResponse = await fetch("/api/orders", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
             });
 
-            const data = await response.json();
+            const orderData = await orderResponse.json();
 
-            if (!response.ok) {
-                if (data.errors) {
-                    console.error("Validation Errors:", data.errors);
+            if (!orderResponse.ok) {
+                if (orderData.errors) {
+                    console.error("Validation Errors:", orderData.errors);
                     alert("Please check your input details.");
                 } else {
-                    throw new Error(data.message || "Failed to place order.");
+                    throw new Error(orderData.message || "Failed to create order.");
                 }
                 setIsLoading(false);
                 return;
             }
 
-            setSuccessId(data.orderId);
+            // Step 2: Create Stripe checkout session
+            const checkoutResponse = await fetch("/api/stripe/checkout", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ orderId: orderData.orderId }),
+            });
+
+            const checkoutData = await checkoutResponse.json();
+
+            if (!checkoutResponse.ok) {
+                throw new Error(checkoutData.message || "Failed to create payment session.");
+            }
+
+            // Step 3: Clear cart and redirect to Stripe
             clearCart();
+
+            // Redirect to Stripe Checkout
+            if (checkoutData.url) {
+                window.location.href = checkoutData.url;
+            } else {
+                throw new Error("No checkout URL received");
+            }
 
         } catch (error: any) {
             console.error(error);
@@ -94,23 +114,8 @@ export default function CheckoutPage() {
         }
     };
 
-    if (successId) {
-        return (
-            <div className="container max-w-md mx-auto py-20 px-4 text-center space-y-6">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto text-green-600">
-                    <Check className="w-10 h-10" />
-                </div>
-                <h1 className="text-3xl font-bold text-green-800">Order Confirmed!</h1>
-                <p className="text-muted-foreground">
-                    Your order <span className="font-mono font-bold text-black">{successId}</span> has been placed successfully.
-                    We will contact you shortly.
-                </p>
-                <Link href="/">
-                    <Button className="w-full mt-4">Back to Home</Button>
-                </Link>
-            </div>
-        );
-    }
+    // No longer need success screen here - Stripe handles redirect
+
 
     return (
         <div className="container max-w-4xl mx-auto py-12 px-4">
@@ -242,11 +247,11 @@ export default function CheckoutPage() {
                                 className="w-full text-lg shadow-lg"
                                 disabled={isLoading}
                             >
-                                {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : "Place Order"}
+                                {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : "Proceed to Payment"}
                             </Button>
 
                             <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground text-center">
-                                <span className="flex items-center gap-1"><Check className="w-3 h-3" /> Cash on Delivery</span>
+                                <span className="flex items-center gap-1"><Check className="w-3 h-3" /> Secure Payment via Stripe</span>
                             </div>
                         </CardContent>
                     </Card>
