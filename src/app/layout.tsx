@@ -17,8 +17,6 @@ export const metadata: Metadata = {
   description: "Order premium custom company stamps online in UAE. Fast delivery, high-quality designs, and secure payment.",
 };
 
-
-
 export default function RootLayout({
   children,
 }: Readonly<{
