@@ -3,67 +3,58 @@ import { test, expect } from '@playwright/test';
 /**
  * Order Tracking E2E Tests
  * 
- * These tests verify the order tracking functionality.
- * Run after e2e-order.spec.ts to ensure an order exists in the database.
+ * Note: These tests create orders via API since the checkout flow now redirects to Stripe
+ * and we can't complete actual payments in E2E tests without credentials.
  */
 
 test.describe('Order Tracking', () => {
-    // We'll create a fresh order for these tests
-    const testOrderId = 'SS-TEST01'; // This will be replaced with actual order
-    const testPhone = '501234567';
+    const testPhone = '+971501234567'; // Full format with country code
+    let testOrderId: string;
+
+    test.beforeAll(async ({ request }) => {
+        // Create a test order via API for tracking tests
+        const response = await request.post('http://localhost:3000/api/orders', {
+            data: {
+                customerName: 'E2E Track Tester',
+                customerEmail: 'test@example.com',
+                customerPhone: testPhone,
+                deliveryMethod: 'DELIVERY',
+                address: 'Test Address, Dubai',
+                totalPrice: 149,
+                items: [
+                    {
+                        shape: 'Round',
+                        color: 'Black',
+                        companyName: 'Track Test Company',
+                        companyNameAr: null,
+                        licenseNumber: 'TT-123',
+                        emirate: 'Dubai',
+                        hasLogo: false,
+                        tradeLicenseUrl: 'https://example.com/license.png',
+                        price: 149,
+                    },
+                ],
+            },
+        });
+
+        const data = await response.json();
+        testOrderId = data.orderId; // API returns 'orderId' not 'friendlyId'
+        console.log('Created test order:', testOrderId);
+    });
 
     test('should successfully track order with correct phone number', async ({ page }) => {
-        // First, create an order to track
-        await page.goto('/');
-        await page.getByPlaceholder('e.g. Supreme Stamps LLC').fill('Track Test Company');
-
-        const licenseInput = page.getByPlaceholder('e.g. 123456');
-        if (await licenseInput.isVisible()) {
-            await licenseInput.fill('TT-123');
-        }
-
-        // Upload file
-        await page.setInputFiles('input[type="file"]', 'tests/fixtures/license.png');
-
-        // Wait for button to be enabled
-        const addToCartBtn = page.getByRole('button', { name: 'Add to Cart' });
-        await expect(addToCartBtn).toBeEnabled({ timeout: 15000 });
-        await page.waitForTimeout(500); // Small delay for upload processing
-        await addToCartBtn.click();
-
-        // Go to cart and checkout
-        await page.click('a[href="/cart"]');
-        await page.getByRole('button', { name: /Checkout/i }).click();
-
-        // Fill checkout
-        await page.fill('#name', 'Track Tester');
-        await page.fill('input[placeholder="Enter phone number"]', testPhone);
-        await page.getByText('🚚 Delivery').click();
-        await page.fill('#address', 'Test Address, Dubai');
-
-        // Place order
-        await page.getByRole('button', { name: 'Place Order' }).click();
-        await expect(page.getByRole('heading', { name: 'Order Confirmed!' })).toBeVisible({ timeout: 15000 });
-
-        // Get the order ID
-        const orderIdText = await page.locator('.font-mono').filter({ hasText: /SS-/ }).textContent();
-        const orderId = orderIdText?.trim() || '';
-
-        console.log('Created order for tracking test:', orderId);
-
-        // Now test tracking
         await page.goto('/track');
         await expect(page.getByRole('heading', { name: /Track Your Order/i })).toBeVisible();
 
         // Fill tracking form with correct details
-        await page.getByPlaceholder(/Order ID/i).fill(orderId);
-        await page.getByPlaceholder(/phone number/i).fill(testPhone);
+        await page.getByPlaceholder(/Order ID/i).fill(testOrderId);
+        await page.getByPlaceholder(/phone number/i).fill('501234567'); // Enter without country code (UI adds it)
 
         // Submit
         await page.getByRole('button', { name: /Track Order/i }).click();
 
         // Verify order is displayed
-        await expect(page.getByText(orderId)).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText(testOrderId)).toBeVisible({ timeout: 10000 });
 
         // Verify status is shown
         const statusElement = page.locator('text=/PENDING|PROCESSING|DELIVERED|Order Placed/i').first();
@@ -71,38 +62,8 @@ test.describe('Order Tracking', () => {
     });
 
     test('should fail to track order with wrong phone number', async ({ page }) => {
-        // Use the order from the previous test (we need to create one first)
-        await page.goto('/');
-        await page.getByPlaceholder('e.g. Supreme Stamps LLC').fill('Wrong Phone Test');
-
-        const licenseInput = page.getByPlaceholder('e.g. 123456');
-        if (await licenseInput.isVisible()) {
-            await licenseInput.fill('WP-123');
-        }
-
-        await page.setInputFiles('input[type="file"]', 'tests/fixtures/license.png');
-        const addToCartBtn = page.getByRole('button', { name: 'Add to Cart' });
-        await expect(addToCartBtn).toBeEnabled({ timeout: 15000 });
-        await page.waitForTimeout(500);
-        await addToCartBtn.click();
-
-        await page.click('a[href="/cart"]');
-        await page.getByRole('button', { name: /Checkout/i }).click();
-
-        await page.fill('#name', 'Wrong Phone Tester');
-        await page.fill('input[placeholder="Enter phone number"]', '501111111');
-        await page.getByText('🚚 Delivery').click();
-        await page.fill('#address', 'Test Address, Dubai');
-
-        await page.getByRole('button', { name: 'Place Order' }).click();
-        await expect(page.getByRole('heading', { name: 'Order Confirmed!' })).toBeVisible({ timeout: 15000 });
-
-        const orderIdText = await page.locator('.font-mono').filter({ hasText: /SS-/ }).textContent();
-        const orderId = orderIdText?.trim() || '';
-
-        // Now try to track with WRONG phone
         await page.goto('/track');
-        await page.getByPlaceholder(/Order ID/i).fill(orderId);
+        await page.getByPlaceholder(/Order ID/i).fill(testOrderId);
         await page.getByPlaceholder(/phone number/i).fill('509999999'); // Wrong phone
 
         await page.getByRole('button', { name: /Track Order/i }).click();
@@ -123,3 +84,4 @@ test.describe('Order Tracking', () => {
         await expect(page.getByText(/not found|does not exist/i)).toBeVisible({ timeout: 5000 });
     });
 });
+
